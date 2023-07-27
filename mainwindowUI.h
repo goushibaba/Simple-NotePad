@@ -7,6 +7,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -43,6 +44,7 @@ public:
     bool initMainEditor();
     QPlainTextEdit mainEditor;
     //文本框
+    QTextCursor tcursor = mainEditor.textCursor();
     QString m_filepath;
 
 public slots:
@@ -60,5 +62,10 @@ public slots:
     //创建新文件
     void onWindowNew();
     //创建新窗口
+    void onCopyAvailable(bool);
+    QAction * findMenuBarItem(QString itemname);
+//    void onUndoAvailable(bool);
+//    void onredoAvailable(bool);
+
 };
 #endif // MAINWINDOWUI_H

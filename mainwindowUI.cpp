@@ -69,7 +69,7 @@ bool MainWindow::initMenuBar(){
 }
 
 bool MainWindow::initFileMenu(QMenuBar *mb){
-    QMenu * menu = new QMenu("File(&F)");
+    QMenu * menu = new QMenu("File(&F)",mb);//构造函数中设置父对象，能添加到对象树，addMenu()方法似乎不行
     bool ret = (menu != NULL);
     if(ret){
         QAction * action = NULL;
@@ -123,7 +123,10 @@ bool MainWindow::initFileMenu(QMenuBar *mb){
         }
 
         if(ret){
+//            menu->setParent(mb);
+//            addMenu()方法似乎没有将QMenuBar对象设置为QMenu对象的父对象，因为用children()方法找不到QMenu对象
             mb->addMenu(menu);
+//            qDebug()<<mb->height()<<"height1"<<mb->children();
         }else{
             delete menu;
         }
@@ -151,36 +154,44 @@ bool MainWindow::initEditMenu(QMenuBar *mb){
         ret = ret && makeAction(action,"Redo(&U)",Qt::CTRL|Qt::Key_R);
         if(ret){
             menu->addAction(action);
+            action->setEnabled(false);
             connect(action,SIGNAL(triggered(bool)),&mainEditor,SLOT(redo()));
         }
         ret = ret && makeAction(action,"Undo(&U)",Qt::CTRL|Qt::Key_Z);
         if(ret){
             menu->addAction(action);
+            action->setEnabled(false);
             connect(action,SIGNAL(triggered(bool)),&mainEditor,SLOT(undo()));
         }
         menu->addSeparator();
         ret = ret && makeAction(action,"Cut(&T)",Qt::CTRL+Qt::Key_X);
         if(ret){
             menu->addAction(action);
+            action->setEnabled(false);
             connect(action,&QAction::triggered,&mainEditor,&QPlainTextEdit::cut);
         }
 
         ret = ret && makeAction(action,"Copy(&C)",Qt::CTRL+Qt::Key_C);
         if(ret){
             menu->addAction(action);
+            action->setEnabled(false);
+            action->setCheckable(true);
+            action->setChecked(true);
             connect(action,&QAction::triggered,&mainEditor,&QPlainTextEdit::copy);
+            connect(&mainEditor,&QPlainTextEdit::copyAvailable,this,&MainWindow::onCopyAvailable);
         }
 
         ret = ret && makeAction(action,"Paste(&P)",Qt::CTRL+Qt::Key_V);
         if(ret){
             menu->addAction(action);
+//            action->setEnabled(false);
             connect(action,&QAction::triggered,&mainEditor,&QPlainTextEdit::paste);
         }
 
         ret = ret && makeAction(action,"Delete(&L)",Qt::Key_Delete);
         if(ret){
             menu->addAction(action);
-//            connect(action,&QAction::triggered,&mainEditor,&QPlainTextEdit::delete);
+//            connect(action,&QAction::triggered,&tcursor,&QTextCursor::removeSelectedText);
         }
 
         ret = ret && makeAction(action,"Find(&F)",Qt::CTRL+Qt::Key_F);
@@ -214,7 +225,9 @@ bool MainWindow::initEditMenu(QMenuBar *mb){
         }
 
         if(ret){
+//            menu->setParent(mb);
             mb->addMenu(menu);
+//             qDebug()<<mb->height()<<"height1"<<mb->children();
         }else{
             delete menu;
         }
@@ -433,7 +446,7 @@ bool MainWindow::initMainEditor(){
     mainEditor.setPlainText("aaaaaaaaaaaaa");
 
 
-    mainEditor.setWordWrapMode(QTextOption::NoWrap);//不换行
+    mainEditor.setWordWrapMode(QTextOption::WordWrap);//不换行
     QTextCursor cursor = mainEditor.textCursor();
     QTextCharFormat format;
     format.setFontPointSize(20);
@@ -454,7 +467,7 @@ bool MainWindow::initMainEditor(){
     QChar ch(a);
     QString s = QString::number(a);
     mainEditor.appendPlainText(s);
-    mainEditor.setWordWrapMode(QTextOption::NoWrap);
+    mainEditor.setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
     cursor.movePosition(QTextCursor::End);
     cursor.insertText("aaaaAAAA"
                       "bbbBBBB");

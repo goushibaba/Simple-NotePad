@@ -1,5 +1,11 @@
 #include "mainwindowUI.h"
 #include <QApplication>
+#include <QList>
+#include <QMenuBar>
+#include <QDebug>
+#include <iostream>
+#include <QMenu>
+#include <QAction>
 
 
 QString MainWindow::createFileDialog(QFileDialog::AcceptMode mode,QString title){
@@ -85,3 +91,29 @@ void MainWindow::onWindowNew(){
     w->setAttribute(Qt::WA_DeleteOnClose);
 }
 //创建新窗口
+void MainWindow::onCopyAvailable(bool available){
+    if(findMenuBarItem("Copy(&C)")!=NULL){
+        findMenuBarItem("Copy(&C)")->setEnabled(available);}
+    else qDebug()<<"空指针";
+//    findMenuBarItem("Cut")->setEnabled(available);
+//    findToolBarItem("Copy")->setEnabled(available);
+//    findToolBarItem("Cut")->setEnabled(available);
+
+}
+
+QAction * MainWindow::findMenuBarItem(QString itemname){
+    QAction *a,b;
+    QMenuBar * mb = this->menuBar();
+    qDebug()<<mb->height()<<"height"<<(mb->children().value(1)->children().value(0) == NULL?true:false );
+    qDebug()<<mb->height()<<"height"<<mb->children().count();
+    qDebug()<<mb->height()<<"height"<<mb->children();
+    qDebug()<<mb->height()<<"height"<<mb->findChildren<QMenu *>();
+    qDebug()<<mb->height()<<"height"<<mb->actions();
+//    b =  mb->children().value(1)->children().value(0);
+//    QList<QAction *> mbactionptr = mb->findChildren<QAction*>();
+//    qDebug()<<mbactionptr.count()<<"count"<<mbactionptr.value(0)->text();
+//    foreach (QMenu * ptr, mbactionptr) {
+//        qDebug()<<ptr->text();
+//        QList<QAction *> meactionptr = ptr->actions();
+    return a;
+}
