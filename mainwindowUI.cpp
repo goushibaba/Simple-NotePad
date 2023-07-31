@@ -13,6 +13,7 @@
 #include <QColor>
 #include <QTextBlock>
 //#include <QObject>
+#include <QTextCursor>
 
 #include <iostream>
 #include <QDebug>
@@ -22,13 +23,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
 
     resize(400,600);
-//    construct();
-//    QMenuBar * mb = menuBar();
-//    QMenu  * menu = new QMenu("File(&F)");
-//    QAction * action = new QAction("text",NULL);
-//    menu->addAction(action);
-//    mb->addMenu(menu);
-//    action->setShortcut(QKeySequence(Qt::Key));
 }
 
 MainWindow::~MainWindow()
@@ -153,21 +147,30 @@ bool MainWindow::initEditMenu(QMenuBar *mb){
         QAction * action = NULL;
         ret = ret && makeAction(action,"Redo(&U)",Qt::CTRL|Qt::Key_R);
         if(ret){
-            menu->addAction(action);
             action->setEnabled(false);
+            action->setCheckable(true);
+            action->setChecked(true);
+            menu->addAction(action);
+
             connect(action,SIGNAL(triggered(bool)),&mainEditor,SLOT(redo()));
+            connect(&mainEditor,&QPlainTextEdit::redoAvailable,this,&MainWindow::onRedoAvailable);
         }
         ret = ret && makeAction(action,"Undo(&U)",Qt::CTRL|Qt::Key_Z);
         if(ret){
-            menu->addAction(action);
             action->setEnabled(false);
+            action->setCheckable(true);
+            action->setChecked(true);
+            menu->addAction(action);
+
             connect(action,SIGNAL(triggered(bool)),&mainEditor,SLOT(undo()));
+            connect(&mainEditor,&QPlainTextEdit::undoAvailable,this,&MainWindow::onUndoAvailable);
         }
         menu->addSeparator();
         ret = ret && makeAction(action,"Cut(&T)",Qt::CTRL+Qt::Key_X);
         if(ret){
-            menu->addAction(action);
             action->setEnabled(false);
+            menu->addAction(action);
+
             connect(action,&QAction::triggered,&mainEditor,&QPlainTextEdit::cut);
         }
 
@@ -177,6 +180,7 @@ bool MainWindow::initEditMenu(QMenuBar *mb){
             action->setEnabled(false);
             action->setCheckable(true);
             action->setChecked(true);
+
             connect(action,&QAction::triggered,&mainEditor,&QPlainTextEdit::copy);
             connect(&mainEditor,&QPlainTextEdit::copyAvailable,this,&MainWindow::onCopyAvailable);
         }
@@ -191,7 +195,17 @@ bool MainWindow::initEditMenu(QMenuBar *mb){
         ret = ret && makeAction(action,"Delete(&L)",Qt::Key_Delete);
         if(ret){
             menu->addAction(action);
-//            connect(action,&QAction::triggered,&tcursor,&QTextCursor::removeSelectedText);
+            action->setEnabled(false);
+            action->setVisible(true);
+            connect(action,&QAction::triggered,[this]()mutable{
+                QTextCursor tc = this->mainEditor.textCursor();
+//                this->mainEditor.setTextCursor(tc);
+                if(tc.hasSelection()){
+                    tc.removeSelectedText();
+                }
+            });
+            connect(&mainEditor,&QPlainTextEdit::copyAvailable,this,&MainWindow::onDeleteAvailable);
+
         }
 
         ret = ret && makeAction(action,"Find(&F)",Qt::CTRL+Qt::Key_F);
@@ -320,18 +334,22 @@ bool MainWindow::initFileToolItem(QToolBar * tb){
     ret = ret && makeAction(action,"New",QStyle::SP_FileDialogNewFolder);
     if(ret){
         tb->addAction(action);
+        connect(action,&QAction::triggered,this,&MainWindow::onFileNew);
     }
     ret = ret && makeAction(action,"Open",QStyle::SP_FileDialogStart);
     if(ret){
         tb->addAction(action);
+        connect(action,&QAction::triggered,this,&MainWindow::onFileOpen);
     }
     ret = ret && makeAction(action,"Save",QStyle::SP_DialogSaveButton);
     if(ret){
         tb->addAction(action);
+        connect(action,&QAction::triggered,this,&MainWindow::onFileSave);
     }
     ret = ret && makeAction(action,"SaveAs",QStyle::SP_DialogSaveButton);
     if(ret){
         tb->addAction(action);
+        connect(action,&QAction::triggered,this,&MainWindow::onFileSaveAs);
     }
     ret = ret && makeAction(action,"Print",QStyle::SP_DesktopIcon);
     if(ret){
@@ -347,22 +365,35 @@ bool MainWindow::initEditToolItem(QToolBar * tb){
     ret = ret && makeAction(action,"Undo",QStyle::SP_TitleBarUnshadeButton);
     if(ret){
         tb->addAction(action);
+        action->setEnabled(false);
+        connect(action,SIGNAL(triggered(bool)),&mainEditor,SLOT(undo()));
+        connect(&mainEditor,&QPlainTextEdit::undoAvailable,this,&MainWindow::onUndoAvailable);
     }
     ret = ret && makeAction(action,"Redo",QStyle::SP_TitleBarContextHelpButton);
     if(ret){
         tb->addAction(action);
+        action->setEnabled(false);
+
+        connect(action,SIGNAL(triggered(bool)),&mainEditor,SLOT(redo()));
+        connect(&mainEditor,&QPlainTextEdit::redoAvailable,this,&MainWindow::onRedoAvailable);
     }
     ret = ret && makeAction(action,"Cut",QStyle::SP_DialogCloseButton);
     if(ret){
         tb->addAction(action);
+        action->setEnabled(false);
+        connect(action,&QAction::triggered,&mainEditor,&QPlainTextEdit::cut);
     }
     ret = ret && makeAction(action,"Copy",QStyle::SP_FileDialogEnd);
     if(ret){
         tb->addAction(action);
+        action->setEnabled(false);
+        connect(action,&QAction::triggered,&mainEditor,&QPlainTextEdit::copy);
+        connect(&mainEditor,&QPlainTextEdit::copyAvailable,this,&MainWindow::onCopyAvailable);
     }
     ret = ret && makeAction(action,"Paste",QStyle::SP_FileDialogBack);
     if(ret){
         tb->addAction(action);
+        connect(action,&QAction::triggered,&mainEditor,&QPlainTextEdit::paste);
     }
     ret = ret && makeAction(action,"Find", QStyle::SP_DialogResetButton);
     if(ret){

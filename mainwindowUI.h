@@ -64,8 +64,10 @@ public slots:
     //创建新窗口
     void onCopyAvailable(bool);
     QAction * findMenuBarItem(QString itemname);
-//    void onUndoAvailable(bool);
-//    void onredoAvailable(bool);
+    QAction * findToolBarItem(QString itemname);
+    void onUndoAvailable(bool);
+    void onRedoAvailable(bool);
+    void onDeleteAvailable(bool);
 
 };
 #endif // MAINWINDOWUI_H

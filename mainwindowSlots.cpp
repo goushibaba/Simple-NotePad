@@ -1,4 +1,5 @@
 #include "mainwindowUI.h"
+#include <QToolBar>
 #include <QApplication>
 #include <QList>
 #include <QMenuBar>
@@ -6,7 +7,9 @@
 #include <iostream>
 #include <QMenu>
 #include <QAction>
-
+//#include <QtCore>
+#include <algorithm>
+//#include <QtAlgorithm>
 
 QString MainWindow::createFileDialog(QFileDialog::AcceptMode mode,QString title){
     QString ret = " ";
@@ -92,28 +95,86 @@ void MainWindow::onWindowNew(){
 }
 //创建新窗口
 void MainWindow::onCopyAvailable(bool available){
-    if(findMenuBarItem("Copy(&C)")!=NULL){
-        findMenuBarItem("Copy(&C)")->setEnabled(available);}
-    else qDebug()<<"空指针";
-//    findMenuBarItem("Cut")->setEnabled(available);
-//    findToolBarItem("Copy")->setEnabled(available);
-//    findToolBarItem("Cut")->setEnabled(available);
-
+        findMenuBarItem("Copy(&C)")->setEnabled(available);
+        findMenuBarItem("Cut(&T)")->setEnabled(available);
+        findToolBarItem("Copy")->setEnabled(available);
+        findToolBarItem("Cut")->setEnabled(available);
 }
 
 QAction * MainWindow::findMenuBarItem(QString itemname){
-    QAction *a,b;
+    QAction *a;
     QMenuBar * mb = this->menuBar();
-    qDebug()<<mb->height()<<"height"<<(mb->children().value(1)->children().value(0) == NULL?true:false );
-    qDebug()<<mb->height()<<"height"<<mb->children().count();
-    qDebug()<<mb->height()<<"height"<<mb->children();
-    qDebug()<<mb->height()<<"height"<<mb->findChildren<QMenu *>();
-    qDebug()<<mb->height()<<"height"<<mb->actions();
-//    b =  mb->children().value(1)->children().value(0);
-//    QList<QAction *> mbactionptr = mb->findChildren<QAction*>();
-//    qDebug()<<mbactionptr.count()<<"count"<<mbactionptr.value(0)->text();
-//    foreach (QMenu * ptr, mbactionptr) {
-//        qDebug()<<ptr->text();
-//        QList<QAction *> meactionptr = ptr->actions();
+    QList<QAction *> menulist = mb->actions();
+//    qDebug()<<menulist;
+//    qDebug()<<menulist.at(1)->text();
+    QList<QAction *>::Iterator menuit = std::find_if(menulist.begin(),menulist.end(),[](QAction * ptr){
+        return (ptr->text()=="Edit(&E)");
+    });
+//    qDebug()<<(*menuit)-text();
+//    qDebug()<<*menuit;
+    QMenu * menu = (*menuit)->menu();
+//    qDebug()<<(*menuit)->menu()->title();
+    QList<QAction *> actionlist = menu->actions();
+//    qDebug()<<actionlist;
+    QList<QAction *>::Iterator actionit = std::find_if(actionlist.begin(),actionlist.end(),[itemname](QAction * ptr){
+        return (ptr->text() == itemname);
+    });
+//    qDebug()<<(*actionit)->text();
+    a=*actionit;
+    return a;
+
+{//    QList<QAction *>::Iterator menuit1 = std::find_if(menulist.begin(),menulist.end(),[itemname](QAction * ptr){
+////        return (ptr->text()=="Edit(&E)");
+//        QMenu * menu = ptr->menu();
+//        QList<QAction *> actionlist = menu->actions();
+//        QList<QAction *>::Iterator actionit = std::find_if(actionlist.begin(),actionlist.end(),[itemname](QAction * ptr){
+//        return (ptr->text() == itemname);
+//        });
+//        return actionit;
+//    });
+//    qDebug()<<1;
+//    for(QList<QAction *>::Iterator it = menulist.begin();it!=menulist.end();++it){
+//            QMenu * menu = (*it)->menu();
+//        qDebug()<<menu->title();
+//            if(menu != NULL){
+//            QList<QAction *> actionlist = menu->actions();
+//            qDebug()<<2;
+//            QList<QAction *>::Iterator actionit = std::find_if(actionlist.begin(),actionlist.end(),[itemname](QAction * ptr){
+//                qDebug()<<2.1;
+//                return (ptr->text() == itemname);
+//            });
+//            if((*actionit)->text()==itemname){
+//            a=*actionit;
+//            break;
+//            }
+//    }
+//    qDebug()<<3;
+//    qDebug()<<a->text();
+//    qDebug()<<4;
+}
+}
+
+void MainWindow::onUndoAvailable(bool available){
+        findMenuBarItem("Undo(&U)")->setEnabled(available);
+        findToolBarItem("Undo")->setEnabled(available);
+}
+
+void MainWindow::onRedoAvailable(bool available){
+        findMenuBarItem("Redo(&U)")->setEnabled(available);
+        findToolBarItem("Redo")->setEnabled(available);
+}
+
+void MainWindow::onDeleteAvailable(bool available){
+        findMenuBarItem("Delete(&L)")->setEnabled(available);
+}
+
+QAction * MainWindow::findToolBarItem(QString itemname){
+    QAction *a;
+    QToolBar * tb = this->findChild<QToolBar *>();
+    QList<QAction *> actionlist = tb->actions();
+    QList<QAction *>::Iterator actionit = std::find_if(actionlist.begin(),actionlist.end(),[itemname](QAction * ptr){
+        return (ptr->toolTip() == itemname);
+    });
+    a=*actionit;
     return a;
 }
