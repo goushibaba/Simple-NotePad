@@ -7,9 +7,9 @@
 #include <iostream>
 #include <QMenu>
 #include <QAction>
-//#include <QtCore>
 #include <algorithm>
-//#include <QtAlgorithm>
+#include <QMimeData>
+
 
 QString MainWindow::createFileDialog(QFileDialog::AcceptMode mode,QString title){
     QString ret = " ";
@@ -36,6 +36,21 @@ void MainWindow::showErrorMessage(const QString & title,const QString & text,QMe
 //错误消息提示框
 void MainWindow::onFileOpen(){
     QString path = createFileDialog(QFileDialog::AcceptOpen,"Open");
+    if(path != ""){
+        QString m_filepath;
+        QFile file(path);
+        if(file.open(QIODevice::ReadOnly|QIODevice::Text)){
+            mainEditor.setPlainText(QString(file.readAll()));
+            file.close();
+            m_filepath = path;
+            setWindowTitle("NotePad -[" + path + "]");
+        }else{
+            showErrorMessage(QString("Error"),QString("Open file error: "+path),QMessageBox::Ok);
+        }
+    }
+}
+
+void MainWindow::onFileOpen(QString path){
     if(path != ""){
         QString m_filepath;
         QFile file(path);
@@ -178,3 +193,63 @@ QAction * MainWindow::findToolBarItem(QString itemname){
     a=*actionit;
     return a;
 }
+
+//拖入事件
+void MainWindow::dragEnterEvent(QDragEnterEvent *event){
+    if(event->mimeData()->hasText()){
+        event->acceptProposedAction();
+//        event->setDropAction(Qt::MoveAction);
+        Qt::DropAction action = event->dropAction();
+        qDebug()<<action;
+        mainEditor.setStyleSheet("background-color: rgba(0, 0, 0, 0.5); ");
+//        if(mainEditor.dropEvent)
+    }else{
+        event->ignore();
+    }
+}
+
+//拖出事件
+void MainWindow::dragLeaveEvent(QDragLeaveEvent *event){
+     mainEditor.setStyleSheet("");
+     QEvent::Type type = event->type();
+     qDebug()<<type;
+}
+
+//放下事件（松开鼠标左键）
+void MainWindow::dropEvent(QDropEvent *event){
+     mainEditor.setStyleSheet("");
+     Qt::DropAction action = event->dropAction();
+     qDebug()<<action<<11;
+    if(event->mimeData()->hasUrls()){
+        connect(&mainEditor,&QPlainTextEdit::textChanged,this,&MainWindow::textHasChanged);
+        qDebug()<<changed;
+        if(changed){
+            onFileSave();
+        }
+        mainEditor.clear();
+        QList<QUrl> list = event->mimeData()->urls();
+        QString path = list[0].toLocalFile();
+        m_filepath = path;
+        qDebug()<<path;
+//        QFileInfo fi(path);
+        QFile file(path);
+        if(file.open(QIODevice::ReadOnly|QIODevice::Text)){
+            QTextStream in(&file);
+            while (!in.atEnd()) {
+                QString line = in.readLine();
+                qDebug() << line;
+                mainEditor.appendPlainText(line);
+            }
+            file.close();
+            setWindowTitle("NotePad -[" + path + "]");
+        }else{
+        showErrorMessage(QString("Error"),QString("Save file error"+m_filepath),QMessageBox::Ok);
+        m_filepath = "";
+        }
+
+    }
+}
+
+
+
+

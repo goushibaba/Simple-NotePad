@@ -14,6 +14,7 @@
 #include <QTextBlock>
 //#include <QObject>
 #include <QTextCursor>
+#include <qglobal.h>
 
 #include <iostream>
 #include <QDebug>
@@ -23,6 +24,9 @@ MainWindow::MainWindow(QWidget *parent)
 {
 
     resize(400,600);
+    mainEditor.setAcceptDrops(false);//dropEvent()函数是protected函数，不能在类外调用
+    setAcceptDrops(true);
+//    this->installEventFilter(this);
 }
 
 MainWindow::~MainWindow()
@@ -78,7 +82,7 @@ bool MainWindow::initFileMenu(QMenuBar *mb){
         if(ret){
             menu->addAction(action);
 //            connect(action,&QAction::triggered,this,&MainWindow::createFileDialog);
-            connect(action,&QAction::triggered,this,&MainWindow::onFileOpen);
+            connect(action,&QAction::triggered,this,qOverload<>(&MainWindow::onFileOpen));
         }
 
         ret = ret && makeAction(action,"Save(&S)",Qt::CTRL + Qt::Key_S);
@@ -339,7 +343,7 @@ bool MainWindow::initFileToolItem(QToolBar * tb){
     ret = ret && makeAction(action,"Open",QStyle::SP_FileDialogStart);
     if(ret){
         tb->addAction(action);
-        connect(action,&QAction::triggered,this,&MainWindow::onFileOpen);
+        connect(action,&QAction::triggered,this,QOverload<>::of(&MainWindow::onFileOpen));
     }
     ret = ret && makeAction(action,"Save",QStyle::SP_DialogSaveButton);
     if(ret){

@@ -6,6 +6,7 @@
 #include <QPlainTextEdit>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QDragEnterEvent>
 
 
 class MainWindow : public QMainWindow
@@ -37,15 +38,20 @@ public:
     bool makeAction(QAction *& action,QString text,QStyle::StandardPixmap icon);
     //工具栏
 
-
     bool initStatusBar();
     //状态栏
 
     bool initMainEditor();
-    QPlainTextEdit mainEditor;
     //文本框
+
+    void dragEnterEvent(QDragEnterEvent *event);
+    void dragLeaveEvent(QDragLeaveEvent *event);
+    void dropEvent(QDropEvent *event);
+
+    QPlainTextEdit mainEditor;
     QTextCursor tcursor = mainEditor.textCursor();
     QString m_filepath;
+    bool changed = false;//用于在拖放支持保存文件时判断文件内容是否发生变化，用槽函数undu()也行
 
 public slots:
       QString createFileDialog(QFileDialog::AcceptMode mode,QString title);
@@ -68,6 +74,14 @@ public slots:
     void onUndoAvailable(bool);
     void onRedoAvailable(bool);
     void onDeleteAvailable(bool);
+
+    inline bool textHasChanged(){
+        changed = true;
+        return changed;
+    }
+
+
+    void onFileOpen(QString path);//拖放文件时打开文件使用
 
 };
 #endif // MAINWINDOWUI_H
