@@ -27,6 +27,7 @@ MainWindow::MainWindow(QWidget *parent)
     mainEditor.setAcceptDrops(false);//dropEvent()函数是protected函数，不能在类外调用
     setAcceptDrops(true);
 //    this->installEventFilter(this);
+    connect(&mainEditor,&QPlainTextEdit::textChanged,this,&MainWindow::textHasChanged);
 }
 
 MainWindow::~MainWindow()
@@ -358,6 +359,7 @@ bool MainWindow::initFileToolItem(QToolBar * tb){
     ret = ret && makeAction(action,"Print",QStyle::SP_DesktopIcon);
     if(ret){
         tb->addAction(action);
+        connect(action,&QAction::triggered,this,&MainWindow::onPrint);
     }
     tb->addSeparator();
     return ret;

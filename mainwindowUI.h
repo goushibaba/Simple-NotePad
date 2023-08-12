@@ -80,8 +80,9 @@ public slots:
         return changed;
     }
 
-
     void onFileOpen(QString path);//拖放文件时打开文件使用
+
+    void onPrint();//打印支持
 
 };
 #endif // MAINWINDOWUI_H

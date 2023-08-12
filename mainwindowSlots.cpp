@@ -9,6 +9,9 @@
 #include <QAction>
 #include <algorithm>
 #include <QMimeData>
+#include <QPrintDialog>
+#include <QPrinter>
+
 
 
 QString MainWindow::createFileDialog(QFileDialog::AcceptMode mode,QString title){
@@ -24,8 +27,11 @@ QString MainWindow::createFileDialog(QFileDialog::AcceptMode mode,QString title)
     if(mode == QFileDialog::AcceptOpen){
         filedialog.setFileMode(QFileDialog::ExistingFile);
     }
-    if(filedialog.exec() == QFileDialog::Accepted){
+    int action = filedialog.exec();
+    if(action == QFileDialog::Accepted){
         ret =filedialog.selectedFiles()[0];
+    }if(action == QFileDialog::Reject){
+        return ret;
     }
     return ret;
 }
@@ -36,7 +42,7 @@ void MainWindow::showErrorMessage(const QString & title,const QString & text,QMe
 //错误消息提示框
 void MainWindow::onFileOpen(){
     QString path = createFileDialog(QFileDialog::AcceptOpen,"Open");
-    if(path != ""){
+    if(path != "" && path!=" "){
         QString m_filepath;
         QFile file(path);
         if(file.open(QIODevice::ReadOnly|QIODevice::Text)){
@@ -51,7 +57,7 @@ void MainWindow::onFileOpen(){
 }
 
 void MainWindow::onFileOpen(QString path){
-    if(path != ""){
+    if(path != "" && path!=" "){
         QString m_filepath;
         QFile file(path);
         if(file.open(QIODevice::ReadOnly|QIODevice::Text)){
@@ -69,13 +75,15 @@ void MainWindow::onFileSave(){
     if(m_filepath == ""){
         m_filepath = createFileDialog(QFileDialog::AcceptSave,"Save");
     }
-    if(m_filepath != ""){
+    if(m_filepath != "" && m_filepath != " "){
         QFile file(m_filepath);
         if(file.open(QIODevice::WriteOnly|QIODevice::Text)){
             QTextStream out(&file);
             out<<mainEditor.toPlainText();
             file.close();
             setWindowTitle("NotePad - [" +m_filepath +"]");
+        }else if(m_filepath == " "){
+            return ;
         }else{
             showErrorMessage(QString("Error"),QString("Save file error"+m_filepath),QMessageBox::Ok);
             m_filepath = "";
@@ -198,11 +206,7 @@ QAction * MainWindow::findToolBarItem(QString itemname){
 void MainWindow::dragEnterEvent(QDragEnterEvent *event){
     if(event->mimeData()->hasText()){
         event->acceptProposedAction();
-//        event->setDropAction(Qt::MoveAction);
-        Qt::DropAction action = event->dropAction();
-        qDebug()<<action;
         mainEditor.setStyleSheet("background-color: rgba(0, 0, 0, 0.5); ");
-//        if(mainEditor.dropEvent)
     }else{
         event->ignore();
     }
@@ -211,33 +215,32 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event){
 //拖出事件
 void MainWindow::dragLeaveEvent(QDragLeaveEvent *event){
      mainEditor.setStyleSheet("");
-     QEvent::Type type = event->type();
-     qDebug()<<type;
+//     QEvent::Type type = event->type();
+//     qDebug()<<type;
 }
 
 //放下事件（松开鼠标左键）
 void MainWindow::dropEvent(QDropEvent *event){
      mainEditor.setStyleSheet("");
-     Qt::DropAction action = event->dropAction();
-     qDebug()<<action<<11;
     if(event->mimeData()->hasUrls()){
-        connect(&mainEditor,&QPlainTextEdit::textChanged,this,&MainWindow::textHasChanged);
-        qDebug()<<changed;
+//        connect(&mainEditor,&QPlainTextEdit::textChanged,this,&MainWindow::textHasChanged);
         if(changed){
             onFileSave();
+            if(m_filepath == " "){
+                m_filepath =  "";
+                return ;
+            }
         }
         mainEditor.clear();
+
         QList<QUrl> list = event->mimeData()->urls();
         QString path = list[0].toLocalFile();
         m_filepath = path;
-        qDebug()<<path;
-//        QFileInfo fi(path);
         QFile file(path);
         if(file.open(QIODevice::ReadOnly|QIODevice::Text)){
             QTextStream in(&file);
             while (!in.atEnd()) {
                 QString line = in.readLine();
-                qDebug() << line;
                 mainEditor.appendPlainText(line);
             }
             file.close();
@@ -250,6 +253,16 @@ void MainWindow::dropEvent(QDropEvent *event){
     }
 }
 
-
+//打印支持
+void MainWindow::onPrint(){
+    QPrintDialog printdialog(this);
+    printdialog.setWindowTitle("Print");
+    if(printdialog.exec() == QPrintDialog::Accepted)
+    {
+        QPrinter *printer = printdialog.printer();
+//        mainEditor.document()->print(printer);
+        mainEditor.print(printer);
+    }
+}
 
 
