@@ -40,6 +40,17 @@ void MainWindow::showErrorMessage(const QString & title,const QString & text,QMe
     QMessageBox::critical(this,title,text,buttons);
 }
 //错误消息提示框
+int MainWindow::showChangedMessage(){
+    QMessageBox msgBox;
+    msgBox.setText("The document has been modified.");
+    msgBox.setInformativeText("Do you want to save your changes?");
+    msgBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+    msgBox.setDefaultButton(QMessageBox::Save);
+    int ret = msgBox.exec();
+    return ret;
+}
+//消息提示框
+
 void MainWindow::onFileOpen(){
     QString path = createFileDialog(QFileDialog::AcceptOpen,"Open");
     if(path != "" && path!=" "){
@@ -207,6 +218,7 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event){
     if(event->mimeData()->hasText()){
         event->acceptProposedAction();
         mainEditor.setStyleSheet("background-color: rgba(0, 0, 0, 0.5); ");
+//        qDebug()<<event->type();
     }else{
         event->ignore();
     }
@@ -215,19 +227,26 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event){
 //拖出事件
 void MainWindow::dragLeaveEvent(QDragLeaveEvent *event){
      mainEditor.setStyleSheet("");
-//     QEvent::Type type = event->type();
-//     qDebug()<<type;
+//     qDebug()<<event->type();
 }
 
 //放下事件（松开鼠标左键）
 void MainWindow::dropEvent(QDropEvent *event){
      mainEditor.setStyleSheet("");
     if(event->mimeData()->hasUrls()){
-//        connect(&mainEditor,&QPlainTextEdit::textChanged,this,&MainWindow::textHasChanged);
         if(changed){
+            int ret = showChangedMessage();
+            if(ret==QMessageBox::Save){
             onFileSave();
             if(m_filepath == " "){
                 m_filepath =  "";
+                event->ignore();
+                return ;
+                }
+            }
+            if(ret == QMessageBox::Cancel){
+                m_filepath =  "";
+                event->ignore();
                 return ;
             }
         }
@@ -245,9 +264,11 @@ void MainWindow::dropEvent(QDropEvent *event){
             }
             file.close();
             setWindowTitle("NotePad -[" + path + "]");
+            changed = false;
         }else{
         showErrorMessage(QString("Error"),QString("Save file error"+m_filepath),QMessageBox::Ok);
         m_filepath = "";
+        changed = false;
         }
 
     }
@@ -265,4 +286,26 @@ void MainWindow::onPrint(){
     }
 }
 
-
+//添加事件过滤器，将mainEditor中viewport接收的事件过滤，将QDropEvent传递到MainWindow中
+bool MainWindow::eventFilter(QObject* obj, QEvent* event){
+    if (obj == mainEditor.viewport()) {
+        if (event->type() == QEvent::Drop) {
+        QDropEvent *DropEvent = static_cast<QDropEvent*>(event);
+        dropEvent(DropEvent);
+//        qDebug() << "Ate key press" << DropEvent->type()<<DropEvent->mimeData();
+        return true;
+        } else if (event->type() == QEvent::DragEnter){
+        QDragEnterEvent *DragEnterEvent = static_cast<QDragEnterEvent *>(event);
+        dragEnterEvent(DragEnterEvent);
+        }else if(event->type() == QEvent::DragLeave){
+        QDragLeaveEvent *DragLeaveEvent = static_cast<QDragLeaveEvent *>(event);
+        dragLeaveEvent(DragLeaveEvent);
+        }else {
+        return false;
+        }
+    }
+else {
+        // pass the event on to the parent class
+        return QMainWindow::eventFilter(obj, event);
+    }
+}

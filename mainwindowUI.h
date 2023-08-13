@@ -7,7 +7,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDragEnterEvent>
-
+#include <QWidget>
 
 class MainWindow : public QMainWindow
 {
@@ -47,14 +47,17 @@ public:
     void dragEnterEvent(QDragEnterEvent *event);
     void dragLeaveEvent(QDragLeaveEvent *event);
     void dropEvent(QDropEvent *event);
+    int  showChangedMessage();//拖放文件时弹窗显示是否保存原来的文件
 
+
+    bool eventFilter(QObject* obj, QEvent* event);
     QPlainTextEdit mainEditor;
     QTextCursor tcursor = mainEditor.textCursor();
     QString m_filepath;
     bool changed = false;//用于在拖放支持保存文件时判断文件内容是否发生变化，用槽函数undu()也行
 
 public slots:
-      QString createFileDialog(QFileDialog::AcceptMode mode,QString title);
+    QString createFileDialog(QFileDialog::AcceptMode mode,QString title);
     //文本对话框
     void showErrorMessage(const QString & title,const QString & text,QMessageBox::StandardButtons buttons);
     //错误消息提示框

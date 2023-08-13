@@ -24,9 +24,10 @@ MainWindow::MainWindow(QWidget *parent)
 {
 
     resize(400,600);
-    mainEditor.setAcceptDrops(false);//dropEvent()函数是protected函数，不能在类外调用
+    mainEditor.setAcceptDrops(true);//dropEvent()函数是protected函数，不能在类外调用
     setAcceptDrops(true);
-//    this->installEventFilter(this);
+    mainEditor.viewport()->installEventFilter(this);
+
     connect(&mainEditor,&QPlainTextEdit::textChanged,this,&MainWindow::textHasChanged);
 }
 
@@ -51,7 +52,6 @@ bool MainWindow::construct(){
     ret = ret && initToolBar();
     ret = ret && initStatusBar();
     ret = ret && initMainEditor();
-
     return ret;
 }
 
@@ -379,7 +379,6 @@ bool MainWindow::initEditToolItem(QToolBar * tb){
     if(ret){
         tb->addAction(action);
         action->setEnabled(false);
-
         connect(action,SIGNAL(triggered(bool)),&mainEditor,SLOT(redo()));
         connect(&mainEditor,&QPlainTextEdit::redoAvailable,this,&MainWindow::onRedoAvailable);
     }

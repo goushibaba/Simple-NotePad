@@ -4,7 +4,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 QT+= printsupport
 
-CONFIG += c++17
+CONFIG += c++17 warn_on debug
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -17,6 +17,7 @@ SOURCES += \
 
 HEADERS += \
     mainwindowUI.h
+
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
