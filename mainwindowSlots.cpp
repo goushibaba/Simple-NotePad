@@ -11,6 +11,7 @@
 #include <QMimeData>
 #include <QPrintDialog>
 #include <QPrinter>
+#include <QPlainTextEdit>>
 
 
 
@@ -46,7 +47,9 @@ int MainWindow::showChangedMessage(){
     msgBox.setInformativeText("Do you want to save your changes?");
     msgBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
     msgBox.setDefaultButton(QMessageBox::Save);
+    msgBox.adjustSize();
     int ret = msgBox.exec();
+//    QMessageBox::information(this,"The document has been modified.","Do you want to save your changes?",QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
     return ret;
 }
 //消息提示框
@@ -66,22 +69,24 @@ void MainWindow::onFileOpen(){
         }
     }
 }
-
-void MainWindow::onFileOpen(QString path){
-    if(path != "" && path!=" "){
-        QString m_filepath;
-        QFile file(path);
-        if(file.open(QIODevice::ReadOnly|QIODevice::Text)){
-            mainEditor.setPlainText(QString(file.readAll()));
-            file.close();
-            m_filepath = path;
-            setWindowTitle("NotePad -[" + path + "]");
-        }else{
-            showErrorMessage(QString("Error"),QString("Open file error: "+path),QMessageBox::Ok);
-        }
-    }
-}
 //打开文件
+
+//void MainWindow::onFileOpen(QString path){
+//    if(path != "" && path!=" "){
+//        QString m_filepath;
+//        QFile file(path);
+//        if(file.open(QIODevice::ReadOnly|QIODevice::Text)){
+//            mainEditor.setPlainText(QString(file.readAll()));
+//            file.close();
+//            m_filepath = path;
+//            setWindowTitle("NotePad -[" + path + "]");
+//        }else{
+//            showErrorMessage(QString("Error"),QString("Open file error: "+path),QMessageBox::Ok);
+//        }
+//    }
+//}
+//拖放文件时打开文件
+
 void MainWindow::onFileSave(){
     if(m_filepath == ""){
         m_filepath = createFileDialog(QFileDialog::AcceptSave,"Save");
@@ -217,6 +222,7 @@ QAction * MainWindow::findToolBarItem(QString itemname){
 void MainWindow::dragEnterEvent(QDragEnterEvent *event){
     if(event->mimeData()->hasText()){
         event->acceptProposedAction();
+        mainEditor.viewport()->acceptDrops();
         mainEditor.setStyleSheet("background-color: rgba(0, 0, 0, 0.5); ");
 //        qDebug()<<event->type();
     }else{
@@ -232,7 +238,7 @@ void MainWindow::dragLeaveEvent(QDragLeaveEvent *event){
 
 //放下事件（松开鼠标左键）
 void MainWindow::dropEvent(QDropEvent *event){
-     mainEditor.setStyleSheet("");
+    mainEditor.setStyleSheet("");
     if(event->mimeData()->hasUrls()){
         if(changed){
             int ret = showChangedMessage();
@@ -260,9 +266,36 @@ void MainWindow::dropEvent(QDropEvent *event){
             QTextStream in(&file);
             while (!in.atEnd()) {
                 QString line = in.readLine();
+                QTextCursor cursor = mainEditor.textCursor();
+//                cursor.setVerticalMovementX(2);
+//                cursor.movePosition(QTextCursor::Left,QTextCursor::MoveAnchor,3);
+//                cursor.setKeepPositionOnInsert(true);
+//                this->mainEditor.viewport()->setCursor(mainEditor.cursor());
+//                mainEditor.setTextCursor(cursor);
+                mainEditor.setCursorWidth(2);
+
+//                mainEditor.setCenterOnScroll(true);
+
+//                QCursor c;
+//                c.setPos(1,2);
+//                mainEditor.viewport()->setCursor(c);
+//                mainEditor.ensureCursorVisible();
+
                 mainEditor.appendPlainText(line);
             }
-            file.close();
+//            mainEditor.setFocus(Qt::ActiveWindowFocusReason);
+//            file.close();
+//            QTextCursor cursor = mainEditor.textCursor();
+//            QTextCharFormat format;
+//            format.setFontPointSize(20);
+//            cursor.mergeCharFormat(format);
+//            mainEditor.setTextCursor(cursor);
+//            QPalette p = mainEditor.palette();
+//            p.setColor(QPalette::Base, QColor(204,232,207));
+//            mainEditor.setPalette(p);
+//            update();
+//            ensureCursorVisible();
+
             setWindowTitle("NotePad -[" + path + "]");
             changed = false;
         }else{
@@ -270,7 +303,6 @@ void MainWindow::dropEvent(QDropEvent *event){
         m_filepath = "";
         changed = false;
         }
-
     }
 }
 
@@ -291,20 +323,20 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event){
     if (obj == mainEditor.viewport()) {
         if (event->type() == QEvent::Drop) {
         QDropEvent *DropEvent = static_cast<QDropEvent*>(event);
+        qDebug()<<"123";
         dropEvent(DropEvent);
-//        qDebug() << "Ate key press" << DropEvent->type()<<DropEvent->mimeData();
-        return true;
+        return false /*QWidget::eventFilter(obj,event)或者false*/;
         } else if (event->type() == QEvent::DragEnter){
         QDragEnterEvent *DragEnterEvent = static_cast<QDragEnterEvent *>(event);
         dragEnterEvent(DragEnterEvent);
+        return true;
         }else if(event->type() == QEvent::DragLeave){
         QDragLeaveEvent *DragLeaveEvent = static_cast<QDragLeaveEvent *>(event);
         dragLeaveEvent(DragLeaveEvent);
-        }else {
-        return false;
+        return true;
         }
-    }
-else {
+        return false;
+    }else {
         // pass the event on to the parent class
         return QMainWindow::eventFilter(obj, event);
     }

@@ -26,9 +26,14 @@ MainWindow::MainWindow(QWidget *parent)
     resize(400,600);
     mainEditor.setAcceptDrops(true);//dropEvent()函数是protected函数，不能在类外调用
     setAcceptDrops(true);
+//    mainEditor.viewport()->setAcceptDrops(true);
     mainEditor.viewport()->installEventFilter(this);
+    mainEditor.installEventFilter(this);
+
+//    mainEditor.installEventFilter(this);
 
     connect(&mainEditor,&QPlainTextEdit::textChanged,this,&MainWindow::textHasChanged);
+
 }
 
 MainWindow::~MainWindow()
@@ -482,7 +487,7 @@ bool MainWindow::initMainEditor(){
     mainEditor.setPlainText("aaaaaaaaaaaaa");
 
 
-    mainEditor.setWordWrapMode(QTextOption::WordWrap);//不换行
+//    mainEditor.setWordWrapMode(QTextOption::WordWrap);//不换行
     QTextCursor cursor = mainEditor.textCursor();
     QTextCharFormat format;
     format.setFontPointSize(20);
@@ -502,13 +507,16 @@ bool MainWindow::initMainEditor(){
     std::cout<<a<<std::endl;
     QChar ch(a);
     QString s = QString::number(a);
-    mainEditor.appendPlainText(s);
-    mainEditor.setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+    mainEditor.appendPlainText(s);   
+    mainEditor.setWordWrapMode(QTextOption::WrapAnywhere);
+    mainEditor.setLineWrapMode(QPlainTextEdit::WidgetWidth);
     cursor.movePosition(QTextCursor::End);
     cursor.insertText("aaaaAAAA"
                       "bbbBBBB");
 
 
+    QTextOption::WrapMode wrapMode = mainEditor.wordWrapMode();
+    mainEditor.setMaximumBlockCount(10);
     setCentralWidget(&mainEditor);
     QPalette p = mainEditor.palette();
     p.setColor(QPalette::Base, QColor(204,232,207));

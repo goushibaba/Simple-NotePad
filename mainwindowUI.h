@@ -52,7 +52,7 @@ public:
 
     bool eventFilter(QObject* obj, QEvent* event);
     QPlainTextEdit mainEditor;
-    QTextCursor tcursor = mainEditor.textCursor();
+//    QTextCursor tcursor = mainEditor.textCursor();
     QString m_filepath;
     bool changed = false;//用于在拖放支持保存文件时判断文件内容是否发生变化，用槽函数undu()也行
 
@@ -83,7 +83,7 @@ public slots:
         return changed;
     }
 
-    void onFileOpen(QString path);//拖放文件时打开文件使用
+//    void onFileOpen(QString path);//拖放文件时打开文件使用
 
     void onPrint();//打印支持
 

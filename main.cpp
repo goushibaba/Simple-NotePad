@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
     w->show();
     int ret = a.exec();
     delete w;
+
 //    QPushButton button;
 //    button.setIcon(QStyle *QApplication::style()->QIcon::fromTheme("application-icon"));  // 使用预定义的“保存”图标
 
