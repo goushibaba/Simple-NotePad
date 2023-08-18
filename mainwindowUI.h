@@ -48,6 +48,7 @@ public:
     void dragLeaveEvent(QDragLeaveEvent *event);
     void dropEvent(QDropEvent *event);
     int  showChangedMessage();//拖放文件时弹窗显示是否保存原来的文件
+    void keyPressEvent(QKeyEvent *event) override;//空格也能自动换行
 
 
     bool eventFilter(QObject* obj, QEvent* event);

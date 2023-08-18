@@ -306,6 +306,17 @@ void MainWindow::dropEvent(QDropEvent *event){
     }
 }
 
+void MainWindow::keyPressEvent(QKeyEvent *event){
+    QKeyEvent * keyevent = static_cast<QKeyEvent *>(event);
+    if(keyevent->key() == Qt::Key_Space && mainEditor.cursorRect().x()>=(mainEditor.width()-mainEditor.font().pointSize())){
+        mainEditor.insertPlainText("\n");
+                        mainEditor.insertPlainText("你好");
+        qDebug()<<mainEditor.width()<<mainEditor.font().pointSize();
+        qDebug() << "Cursor Rect: X=" << mainEditor.cursorRect().x() << ", Y=" << mainEditor.cursorRect().y()
+                 << ", Width=" << mainEditor.cursorRect().width() << ", Height=" << mainEditor.cursorRect().height();
+    }
+}
+
 //打印支持
 void MainWindow::onPrint(){
     QPrintDialog printdialog(this);
@@ -320,10 +331,10 @@ void MainWindow::onPrint(){
 
 //添加事件过滤器，将mainEditor中viewport接收的事件过滤，将QDropEvent传递到MainWindow中
 bool MainWindow::eventFilter(QObject* obj, QEvent* event){
-    if (obj == mainEditor.viewport()) {
+    if (obj== mainEditor.viewport()) {
         if (event->type() == QEvent::Drop) {
         QDropEvent *DropEvent = static_cast<QDropEvent*>(event);
-        qDebug()<<"123";
+        qDebug()<<obj->parent()<<obj;
         dropEvent(DropEvent);
         return false /*QWidget::eventFilter(obj,event)或者false*/;
         } else if (event->type() == QEvent::DragEnter){
@@ -335,9 +346,29 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event){
         dragLeaveEvent(DragLeaveEvent);
         return true;
         }
-        return false;
-    }else {
-        // pass the event on to the parent class
-        return QMainWindow::eventFilter(obj, event);
     }
+    if(obj == &mainEditor){
+        if(event->type() == QEvent::KeyPress ){
+        QKeyEvent * keyevent = static_cast<QKeyEvent *>(event);
+        if(keyevent->key() == Qt::Key_Space && mainEditor.cursorRect().x()>=(mainEditor.width()-mainEditor.font().pointSize())){
+                        mainEditor.insertPlainText("\n");
+//                        qDebug()<<mainEditor.width()<<mainEditor.font().pointSize();
+//                        qDebug() << "Cursor Rect: X=" << mainEditor.cursorRect().x() << ", Y=" << mainEditor.cursorRect().y()
+//                                 << ", Width=" << mainEditor.cursorRect().width() << ", Height=" << mainEditor.cursorRect().height();
+                        return true;
+        }
+        //        keyPressEvent(keyevent);
+        else if(keyevent->key() == Qt::Key_Backspace &&mainEditor.cursorRect().x()<5){
+                        QTextCursor cursor = mainEditor.textCursor();
+                        // 将光标移动到上一行
+                        cursor.movePosition(QTextCursor::Up);
+                        // 移动到行尾
+                        cursor.movePosition(QTextCursor::EndOfLine);
+                        // 设置新的光标位置
+                        mainEditor.setTextCursor(cursor);qDebug()<<"keykey";
+                        return true;
+        }
+        }
+    }
+        return QMainWindow::eventFilter(obj, event);// pass the event on to the parent class
 }
